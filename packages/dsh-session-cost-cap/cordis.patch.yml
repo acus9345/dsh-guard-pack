@@ -1,0 +1,17 @@
+# dsh-session-cost-cap: cap what one session may spend on model calls.
+# To change settings, add a row like the one below to
+# ~/.dsh/profiles/<profile>/cordis.patch.yml (one profile) or ~/.dsh/cordis.patch.yml
+# (every profile). Keys you leave out keep their defaults.
+#
+# - id: session-cost-cap
+#   config:
+#     maxUsd: 5                  # dollars per session, subagents included; 0 = off
+#     maxTokens: 0               # input + output tokens per session; 0 = off
+#     mode: ask                  # or deny
+#     extendBy: 0.5              # after an approval, allow 50% more before asking again
+#     warnAt: 0.8                # tell the model at 80% of the budget; 0 = never
+#     prices:                    # USD per 1M tokens, for models llm-tally doesn't know
+#       my-model: { input: 1, output: 4, cachedInput: 0.1 }
+- insert:
+    - id: session-cost-cap
+      name: dsh-session-cost-cap

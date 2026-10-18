@@ -1,0 +1,19 @@
+# dsh-block-secret-leaks: keep secrets out of the conversation and out of git.
+# To change settings, add a row like the one below to
+# ~/.dsh/profiles/<profile>/cordis.patch.yml (one profile) or ~/.dsh/cordis.patch.yml
+# (every profile). Keys you leave out keep their defaults.
+#
+# - id: block-secret-leaks
+#   config:
+#     mode: deny                 # or ask
+#     guardReads: true           # the read tool on .env, keys, .npmrc...
+#     guardShell: true           # cat .env, printenv, echo $API_KEY, git add .env...
+#     guardWrites: true          # secrets written into committed files
+#     redactOutput: true         # [REDACTED: NAME] in tool output
+#     disabledRules: []          # read-secret-file, copy-secret-file, upload-secret-file,
+#                                # dump-env, echo-secret-var, git-add-secret, literal-secret
+#     extraPatterns: []          # e.g. ['acme_[a-z0-9]{32}']
+#     extraSecretNames: []       # e.g. ['MY_CONN']
+- insert:
+    - id: block-secret-leaks
+      name: dsh-block-secret-leaks

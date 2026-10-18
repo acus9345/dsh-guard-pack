@@ -1,0 +1,71 @@
+{
+  "name": "dsh-format-after-edit",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness plugin that runs your project's formatter (Prettier, Biome, dprint, Ruff, Black, gofmt, rustfmt, clang-format or your own) on every file the agent edits.",
+  "license": "MIT",
+  "author": "acus9345",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README_zh.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test \"tests/*.test.ts\""
+  },
+  "engines": {
+    "node": ">=22.19"
+  },
+  "keywords": ["dsh","dsh-plugin","deepseek-harness","deepseek","agent","format","formatter","prettier","biome","ruff","gofmt","rustfmt"],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.0",
+    "@deepseek-ai/schemastery": "^3.18.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acus9345/dsh-guard-pack.git",
+    "directory": "packages/dsh-format-after-edit"
+  },
+  "homepage": "https://github.com/acus9345/dsh-guard-pack/tree/main/packages/dsh-format-after-edit#readme",
+  "bugs": {
+    "url": "https://github.com/acus9345/dsh-guard-pack/issues"
+  }
+}

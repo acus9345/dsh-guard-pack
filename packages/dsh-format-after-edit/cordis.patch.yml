@@ -1,0 +1,18 @@
+# dsh-format-after-edit: run the project's formatter on every file the agent edits.
+# To change settings, add a row like the one below to
+# ~/.dsh/profiles/<profile>/cordis.patch.yml (one profile) or ~/.dsh/cordis.patch.yml
+# (every profile). Keys you leave out keep their defaults.
+#
+# - id: format-after-edit
+#   config:
+#     formatters: [prettier, biome, dprint, ruff, black, gofmt, rustfmt, clang-format]
+#     custom:                    # checked first; {file} is the edited file
+#       - files: ['*.php']
+#         command: vendor/bin/pint {file}
+#     ignore: ['**/node_modules/**', '**/dist/**']
+#     timeoutMs: 20000
+#     reportChanges: true
+#     reportErrors: true
+- insert:
+    - id: format-after-edit
+      name: dsh-format-after-edit

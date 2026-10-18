@@ -1,0 +1,71 @@
+{
+  "name": "dsh-block-secret-leaks",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness plugin that keeps secrets out of the conversation and out of git: blocks reading .env and key files, printing or uploading secrets, committing them, and redacts them from tool output.",
+  "license": "MIT",
+  "author": "acus9345",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README_zh.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test \"tests/*.test.ts\""
+  },
+  "engines": {
+    "node": ">=22.19"
+  },
+  "keywords": ["dsh","dsh-plugin","deepseek-harness","deepseek","agent","guard","secrets","api-key","dotenv","security","redact"],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.0",
+    "@deepseek-ai/schemastery": "^3.18.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acus9345/dsh-guard-pack.git",
+    "directory": "packages/dsh-block-secret-leaks"
+  },
+  "homepage": "https://github.com/acus9345/dsh-guard-pack/tree/main/packages/dsh-block-secret-leaks#readme",
+  "bugs": {
+    "url": "https://github.com/acus9345/dsh-guard-pack/issues"
+  }
+}

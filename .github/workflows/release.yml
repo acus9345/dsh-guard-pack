@@ -1,0 +1,92 @@
+name: Release
+
+# Push a tag named <package>-v<version>, e.g. dsh-session-cost-cap-v0.1.1,
+# to publish that package from packages/ and create its GitHub release.
+on:
+  push:
+    tags: ["dsh-*-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub release
+      id-token: write # npm trusted publishing (OIDC) and provenance
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or newer.
+      - run: npm install -g npm@latest pnpm@10
+
+      - name: Read the package and version from the tag
+        id: tag
+        run: |
+          name="${GITHUB_REF_NAME%-v*}"
+          version="${GITHUB_REF_NAME##*-v}"
+          dir="packages/$name"
+          if [ ! -f "$dir/package.json" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME names $name, but there is no $dir/package.json."
+            exit 1
+          fi
+          actual="$(node -p "require('./$dir/package.json').version")"
+          if [ "$actual" != "$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match $dir/package.json version $actual. Bump the version or fix the tag."
+            exit 1
+          fi
+          {
+            echo "name=$name"
+            echo "version=$version"
+            echo "dir=$dir"
+          } >> "$GITHUB_OUTPUT"
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:e2e
+
+      # No token: npm exchanges the GitHub OIDC token for a short-lived publish credential.
+      # Skipped if this version is already on npm (the first version is published by hand
+      # before trusted publishing can be set up), so re-runs still create the release.
+      - name: Publish to npm
+        env:
+          NAME: ${{ steps.tag.outputs.name }}
+          VERSION: ${{ steps.tag.outputs.version }}
+          DIR: ${{ steps.tag.outputs.dir }}
+        run: |
+          if [ "$(npm view "$NAME@$VERSION" version 2>/dev/null)" = "$VERSION" ]; then
+            echo "::notice::$NAME@$VERSION is already on npm, skipping publish."
+          else
+            npm publish --access public --workspace "$DIR"
+          fi
+
+      - name: Extract release notes from the package's CHANGELOG.md
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+          DIR: ${{ steps.tag.outputs.dir }}
+        run: |
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found && /^\[[^]]+\]: / { next }
+            found { print }
+          ' "$DIR/CHANGELOG.md" > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::No section for $VERSION in $DIR/CHANGELOG.md. Add a '## [$VERSION]' section."
+            exit 1
+          fi
+          cat release-notes.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ steps.tag.outputs.name }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$NAME $VERSION" --notes-file release-notes.md --verify-tag

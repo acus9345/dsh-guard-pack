@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        # DSH uses bash on Linux/macOS and pwsh on Windows, so test both.
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      # dsh plugin add installs through pnpm; the install test needs it on PATH.
+      - run: npm install -g pnpm@10
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:e2e

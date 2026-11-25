@@ -1,6 +1,6 @@
 {
   "name": "dsh-block-secret-leaks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DeepSeek Harness plugin that keeps secrets out of the conversation and out of git: blocks reading .env and key files, printing or uploading secrets, committing them, and redacts them from tool output.",
   "license": "MIT",
   "author": "acus9345",
@@ -33,7 +33,19 @@
   "engines": {
     "node": ">=22.19"
   },
-  "keywords": ["dsh","dsh-plugin","deepseek-harness","deepseek","agent","guard","secrets","api-key","dotenv","security","redact"],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "agent",
+    "guard",
+    "secrets",
+    "api-key",
+    "dotenv",
+    "security",
+    "redact"
+  ],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

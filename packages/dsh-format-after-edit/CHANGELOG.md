@@ -1,6 +1,11 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this package are documented here. This project follows [Semantic Versioning](https://semver.org/).
+
+## [  run `npm fund` for details] - 2026-11-25
+
+### Fixed
+- Fix Windows case-insensitive ancestor checks, cross-drive workspace boundaries, .cmd/.bat shim resolution on PATH, and glob/timeout handling.
 
 ## [0.1.0] - 2026-10-18
 

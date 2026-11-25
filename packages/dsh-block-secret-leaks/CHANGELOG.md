@@ -1,6 +1,11 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this package are documented here. This project follows [Semantic Versioning](https://semver.org/).
+
+## [  run `npm fund` for details] - 2026-11-25
+
+### Fixed
+- Fix quiet-flag and cut -f1,2 pipeline bypasses, PowerShell env: reads, bash -lc, **/.aws/credentials matching, and glob/path normalization.
 
 ## [0.1.0] - 2026-10-18
 

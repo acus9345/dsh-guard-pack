@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-cost-cap",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DeepSeek Harness plugin that caps what one session may spend on model calls. Tracks real token usage and prices, warns the model as the cap nears, and stops or asks before going over.",
   "license": "MIT",
   "author": "acus9345",
@@ -33,7 +33,19 @@
   "engines": {
     "node": ">=22.19"
   },
-  "keywords": ["dsh","dsh-plugin","deepseek-harness","deepseek","agent","guard","cost","budget","tokens","pricing","llm"],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "agent",
+    "guard",
+    "cost",
+    "budget",
+    "tokens",
+    "pricing",
+    "llm"
+  ],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

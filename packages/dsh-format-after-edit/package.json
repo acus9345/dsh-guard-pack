@@ -1,6 +1,6 @@
 {
   "name": "dsh-format-after-edit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DeepSeek Harness plugin that runs your project's formatter (Prettier, Biome, dprint, Ruff, Black, gofmt, rustfmt, clang-format or your own) on every file the agent edits.",
   "license": "MIT",
   "author": "acus9345",
@@ -33,7 +33,20 @@
   "engines": {
     "node": ">=22.19"
   },
-  "keywords": ["dsh","dsh-plugin","deepseek-harness","deepseek","agent","format","formatter","prettier","biome","ruff","gofmt","rustfmt"],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "agent",
+    "format",
+    "formatter",
+    "prettier",
+    "biome",
+    "ruff",
+    "gofmt",
+    "rustfmt"
+  ],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

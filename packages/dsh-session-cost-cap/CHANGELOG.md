@@ -2,7 +2,7 @@
 
 All notable changes to this package are documented here. This project follows [Semantic Versioning](https://semver.org/).
 
-## [  run `npm fund` for details] - 2026-11-25
+## [0.1.1] - 2026-11-25
 
 ### Fixed
 - Fix aborted-before-dispatch approval handling and cacheReadTokens accounting when totalTokens is omitted.

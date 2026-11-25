@@ -45,6 +45,13 @@ test('wasApproved tells approvals from refusals', () => {
   assert.equal(wasApproved({ isError: true, error: { message: 'exit code 1' }, content: [] } as never), true)
   assert.equal(wasApproved({ isError: true, error: { message: 'the user rejected tool "bash"' }, content: [] } as never), false)
   assert.equal(wasApproved({ isError: true, error: { message: 'tool "bash" requires approval, but no approval channel is available' }, content: [] } as never), false)
+  assert.equal(wasApproved({ isError: true, error: { message: 'tool call aborted before dispatch', info: { name: 'ToolAbortError', code: 'ABORTED_BEFORE_DISPATCH' } }, content: [] } as never), false)
+})
+
+test('charge counts disjoint cacheReadTokens when totalTokens is absent and cached > input', () => {
+  const c = charge('my-model', { inputTokens: 0, outputTokens: 50, cacheReadTokens: 1000 }, { 'my-model': { input: 1, output: 2, cachedInput: 0.1 } })
+  assert.equal(c.tokens, 1050)
+  assert.ok(Math.abs(c.usd! - (1000 * 0.1 + 50 * 2) / 1e6) < 1e-12)
 })
 
 // A minimal stand-in for DSH: collects listeners and lets the test fire events.

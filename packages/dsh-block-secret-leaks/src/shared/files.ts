@@ -4,7 +4,7 @@
  * workspace, and read the current file content.
  */
 import { readFile, stat } from 'node:fs/promises'
-import { isAbsolute, relative, resolve, sep } from 'node:path'
+import { relative, resolve, sep } from 'node:path'
 import type { ToolExecution } from '@deepseek-ai/dsh-tools'
 
 /** What a file-mutating tool call intends to do. */
@@ -65,7 +65,7 @@ export function workspaceOf(exec: Pick<ToolExecution, 'agent'>): string {
  * @returns absolute path and POSIX relative path (`../` prefixed when outside).
  */
 export function resolvePath(path: string, workspace: string): { absolute: string; relative: string } {
-  const absolute = isAbsolute(path) ? path : resolve(workspace, path)
+  const absolute = resolve(workspace, path)
   return { absolute, relative: relative(workspace, absolute).split(sep).join('/') }
 }
 

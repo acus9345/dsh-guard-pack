@@ -174,6 +174,7 @@ export function findSecrets(text: string, known: readonly KnownSecret[], extra: 
   for (const p of [...TOKEN_PATTERNS, ...extra]) {
     for (const m of text.matchAll(new RegExp(p.pattern.source, p.pattern.flags.includes('g') ? p.pattern.flags : `${p.pattern.flags}g`))) {
       const value = m[0]
+      if (value.length === 0) continue
       if (seen.has(value) || [...seen].some(s => s.includes(value))) continue
       if (p.id !== 'private-key' && isPlaceholder(value)) continue
       seen.add(value)
@@ -187,6 +188,7 @@ export function findSecrets(text: string, known: readonly KnownSecret[], extra: 
 export function redact(text: string, matches: readonly SecretMatch[]): string {
   let out = text
   for (const m of [...matches].sort((a, b) => b.value.length - a.value.length)) {
+    if (m.value.length === 0) continue
     const tag = m.name ?? m.kind
     if (m.kind === 'private-key') {
       // Redact the whole key block, not just its header line.

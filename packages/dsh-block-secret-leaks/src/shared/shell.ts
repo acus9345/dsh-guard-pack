@@ -109,7 +109,7 @@ export function tokenize(input: string, dialect: ShellDialect = 'posix'): Token[
       flush()
       tokens.push({ kind: 'op', value: op })
       i += op.length
-      if (op === '<<' || op === '<<-') i = skipHeredoc(input, i, tokens)
+      if (op === '<<' || op === '<<-') i = skipHeredoc(input, i, tokens, dialect)
       continue
     }
     word += ch
@@ -122,7 +122,7 @@ export function tokenize(input: string, dialect: ShellDialect = 'posix'): Token[
 }
 
 /** Consume a heredoc delimiter and body; emits a placeholder word for the delimiter. */
-function skipHeredoc(input: string, start: number, tokens: Token[]): number {
+function skipHeredoc(input: string, start: number, tokens: Token[], dialect: ShellDialect): number {
   let i = start
   while (input[i] === ' ' || input[i] === '\t') i += 1
   const match = /^(['"]?)([A-Za-z0-9_.-]+)\1/.exec(input.slice(i))
@@ -139,7 +139,7 @@ function skipHeredoc(input: string, start: number, tokens: Token[]): number {
   const body = input.slice(bodyStart)
   const end = terminator.exec(body)
   const after = end === null ? input.length : bodyStart + end.index + end[0].length
-  tokens.push(...tokenize(rest))
+  tokens.push(...tokenize(rest, dialect))
   return after
 }
 

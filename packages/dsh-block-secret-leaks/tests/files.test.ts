@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { canonicalJson } from '../src/shared/files.ts'
+import { canonicalJson, resolvePath } from '../src/shared/files.ts'
+import { matchesAny } from '../src/shared/glob.ts'
 
 test('canonicalJson ignores key order, so a reordered retry counts as identical', () => {
   // Seen in the desktop app: the retry of a blocked edit came back with its keys in a different order.
@@ -13,4 +14,14 @@ test('canonicalJson ignores key order, so a reordered retry counts as identical'
 test('canonicalJson still tells different calls apart', () => {
   assert.notEqual(canonicalJson({ new_string: 'b' }), canonicalJson({ new_string: 'c' }))
   assert.notEqual(canonicalJson({ x: [1, 2] }), canonicalJson({ x: [2, 1] }))
+})
+
+test('matchesAny ignores blank globs and tolerates unclosed braces', () => {
+  assert.equal(matchesAny('src/a.ts', ['', '   ', '!']), false)
+  assert.equal(matchesAny('foo{bar', ['foo{bar']), true)
+})
+
+test('resolvePath normalizes separators for absolute paths', () => {
+  const res = resolvePath('C:/ws/src/a.ts', 'C:\\ws')
+  assert.equal(res.relative.includes('\\'), false)
 })

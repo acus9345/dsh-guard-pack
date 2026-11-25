@@ -38,7 +38,7 @@ export const name = 'block-secret-leaks'
 export const DEFAULT_SECRET_FILES: readonly string[] = [
   '.env', '.env.*', '*.env', '.dev.vars', '!.env.example', '!.env.sample', '!.env.template', '!.env.defaults', '!*.example.env',
   '*.pem', '*.key', '*.p12', '*.pfx', '*.jks', '*.keystore', 'id_rsa', 'id_dsa', 'id_ecdsa', 'id_ed25519',
-  '.npmrc', '.pypirc', '.netrc', '_netrc', '.git-credentials', '.aws/credentials', 'credentials.json', 'service-account*.json',
+  '.npmrc', '.pypirc', '.netrc', '_netrc', '.git-credentials', '**/.aws/credentials', 'credentials.json', 'service-account*.json',
   '*.tfvars', '!*.example.tfvars', '.secrets', 'secrets.y*ml', '!*.pub',
 ]
 
@@ -139,6 +139,7 @@ export function apply(ctx: Context, config: Config): void {
   }
   const patternsOf = (cfg: Config): TokenPattern[] =>
     cfg.extraPatterns.flatMap((source, i) => {
+      if (source.trim().length === 0) return []
       try {
         return [{ id: `custom-${i + 1}`, label: `a secret matching /${source}/`, pattern: new RegExp(source, 'g') }]
       } catch {

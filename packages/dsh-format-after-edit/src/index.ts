@@ -16,6 +16,7 @@
  *
  * @module dsh-format-after-edit
  */
+import { isAbsolute } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import Schema from '@deepseek-ai/schemastery'
 import type { PostToolDecision, ToolExecution, ToolExecutionResult } from '@deepseek-ai/dsh-tools'
@@ -88,7 +89,7 @@ export function apply(ctx: Context, config: Config): void {
     if (mutation === undefined) return decision
     const workspace = workspaceOf(exec)
     const { absolute, relative: rel } = resolvePath(mutation.path, workspace)
-    if (rel.startsWith('../') || matchesAny(rel, cfg.ignore)) return decision
+    if (rel === '..' || rel.startsWith('../') || isAbsolute(rel) || matchesAny(rel, cfg.ignore)) return decision
 
     let outcome: Outcome
     try {

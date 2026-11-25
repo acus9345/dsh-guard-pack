@@ -103,7 +103,8 @@ export function capText(state: BudgetState, mode: Config['mode']): string {
 /** Whether a call that needed approval actually ran, rather than being rejected, cancelled or refused. */
 export function wasApproved(result: Readonly<ToolExecutionResult>): boolean {
   if (!result.isError) return true
-  return !/^(?:the user rejected tool|approval for tool|tool "[^"]*" requires approval|dsh-session-cost-cap)/.test(result.error.message)
+  if (result.error.info?.code === 'ABORTED_BEFORE_DISPATCH') return false
+  return !/^(?:the user rejected tool|approval for tool|tool "[^"]*" requires approval|tool call aborted before dispatch|dsh-session-cost-cap)/.test(result.error.message)
 }
 
 export function apply(ctx: Context, config: Config): void {

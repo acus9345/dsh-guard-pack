@@ -39,8 +39,8 @@ export function charge(model: string, usage: UsageLike, overrides: Readonly<Reco
   let input = Math.max(0, usage.inputTokens)
   const output = Math.max(0, usage.outputTokens)
   // Some providers count cache reads inside inputTokens, others report them separately.
-  // A total that only adds up with the cache reads included means they were separate.
-  if (cached > 0 && usage.totalTokens !== undefined && usage.totalTokens >= input + output + cached) input += cached
+  // A total that only adds up with the cache reads included — or cached exceeding input when total is absent — means they were separate.
+  if (cached > 0 && (usage.totalTokens !== undefined ? usage.totalTokens >= input + output + cached : cached > input)) input += cached
   const tokens = input + output
   const override = overrides[model] ?? Object.entries(overrides).find(([id]) => id.toLowerCase() === model.toLowerCase())?.[1]
   if (override !== undefined) {

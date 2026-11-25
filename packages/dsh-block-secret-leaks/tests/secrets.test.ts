@@ -82,3 +82,9 @@ test('redact replaces values and whole private key blocks', () => {
   const known = [{ name: 'DB_PASSWORD', value: 'Zq9Lm2Xp8Kd0', source: '.env' }]
   assert.equal(redact('pw=Zq9Lm2Xp8Kd0', findSecrets('pw=Zq9Lm2Xp8Kd0', known)), 'pw=[REDACTED: DB_PASSWORD]')
 })
+
+test('findSecrets ignores empty-string matches from custom patterns', () => {
+  const found = findSecrets('hello world', [], [{ id: 'empty', label: 'empty', pattern: /foo|/g }])
+  assert.deepEqual(found, [])
+  assert.equal(redact('hello world', [{ kind: 'empty', label: 'empty', value: '' }]), 'hello world')
+})

@@ -39,10 +39,16 @@ const PRETTIER_CONFIGS = ['.prettierrc', '.prettierrc.json', '.prettierrc.json5'
 function ancestors(absFile: string, root: string): string[] {
   const out: string[] = []
   const top = resolve(root)
-  const inside = (dir: string): boolean => dir === top || dir.startsWith(top.endsWith(sep) ? top : top + sep)
-  for (let dir = dirname(absFile); inside(dir); dir = dirname(dir)) {
+  const norm = (p: string): string => (process.platform === 'win32' ? p.toLowerCase() : p)
+  const topNorm = norm(top)
+  const prefix = topNorm.endsWith(sep) ? topNorm : topNorm + sep
+  const inside = (dir: string): boolean => {
+    const d = norm(dir)
+    return d === topNorm || d.startsWith(prefix)
+  }
+  for (let dir = dirname(resolve(absFile)); inside(dir); dir = dirname(dir)) {
     out.push(dir)
-    if (dir === top || dirname(dir) === dir) break
+    if (norm(dir) === topNorm || dirname(dir) === dir) break
   }
   return out
 }
@@ -87,14 +93,23 @@ function venvBin(dirs: readonly string[], tool: string): string | undefined {
   return undefined
 }
 
+/** Find an executable on PATH, returning its resolved path (or undefined when absent). */
+export function resolveOnPath(name: string): string | undefined {
+  const exts = process.platform === 'win32' ? ['.exe', '.cmd', '.bat', ''] : ['']
+  for (const raw of (process.env.PATH ?? '').split(process.platform === 'win32' ? ';' : ':')) {
+    const dir = raw.trim().replace(/^"|"$/g, '')
+    if (dir === '') continue
+    for (const ext of exts) {
+      const candidate = join(dir, name + ext)
+      if (existsSync(candidate)) return candidate
+    }
+  }
+  return undefined
+}
+
 /** Is an executable on PATH? */
 export function onPath(name: string): boolean {
-  const exts = process.platform === 'win32' ? ['.exe', '.cmd', '.bat', ''] : ['']
-  for (const dir of (process.env.PATH ?? '').split(process.platform === 'win32' ? ';' : ':')) {
-    if (dir === '') continue
-    for (const ext of exts) if (existsSync(join(dir, name + ext))) return true
-  }
-  return false
+  return resolveOnPath(name) !== undefined
 }
 
 /**
@@ -147,33 +162,36 @@ export function planFor(
       const pyproject = readText(join(dir, 'pyproject.toml'))
       const ruffConfig = existsSync(join(dir, 'ruff.toml')) || existsSync(join(dir, '.ruff.toml')) || /^\[tool\.ruff(?:\.format)?\]/m.test(pyproject)
       if (on('ruff') && ruffConfig) {
-        const bin = venvBin(dirs, 'ruff') ?? (onPath('ruff') ? 'ruff' : undefined)
+        const bin = venvBin(dirs, 'ruff') ?? resolveOnPath('ruff')
         if (bin !== undefined) return { formatter: 'ruff', file: bin, args: ['format', '--quiet', absFile], cwd: dir }
       }
       if (on('black') && /^\[tool\.black\]/m.test(pyproject)) {
-        const bin = venvBin(dirs, 'black') ?? (onPath('black') ? 'black' : undefined)
+        const bin = venvBin(dirs, 'black') ?? resolveOnPath('black')
         if (bin !== undefined) return { formatter: 'black', file: bin, args: ['--quiet', absFile], cwd: dir }
       }
     }
     return undefined
   }
 
-  if (ext === '.go' && on('gofmt') && dirs.some(d => existsSync(join(d, 'go.mod'))) && onPath('gofmt')) {
-    return { formatter: 'gofmt', file: 'gofmt', args: ['-w', absFile], cwd: dirname(absFile) }
+  if (ext === '.go' && on('gofmt') && dirs.some(d => existsSync(join(d, 'go.mod')))) {
+    const bin = resolveOnPath('gofmt')
+    if (bin !== undefined) return { formatter: 'gofmt', file: bin, args: ['-w', absFile], cwd: dirname(absFile) }
   }
 
   if (ext === '.rs' && on('rustfmt')) {
     const crate = dirs.find(d => existsSync(join(d, 'Cargo.toml')))
-    if (crate !== undefined && onPath('rustfmt')) {
+    const bin = crate !== undefined ? resolveOnPath('rustfmt') : undefined
+    if (crate !== undefined && bin !== undefined) {
       const edition = /^\s*edition\s*=\s*"(\d{4})"/m.exec(readText(join(crate, 'Cargo.toml')))?.[1] ?? '2021'
-      return { formatter: 'rustfmt', file: 'rustfmt', args: ['--edition', edition, absFile], cwd: crate }
+      return { formatter: 'rustfmt', file: bin, args: ['--edition', edition, absFile], cwd: crate }
     }
     return undefined
   }
 
   if (C_LIKE.has(ext) && on('clang-format')) {
     const configured = dirs.find(d => existsSync(join(d, '.clang-format')) || existsSync(join(d, '_clang-format')))
-    if (configured !== undefined && onPath('clang-format')) return { formatter: 'clang-format', file: 'clang-format', args: ['-i', absFile], cwd: configured }
+    const bin = configured !== undefined ? resolveOnPath('clang-format') : undefined
+    if (configured !== undefined && bin !== undefined) return { formatter: 'clang-format', file: bin, args: ['-i', absFile], cwd: configured }
   }
   return undefined
 }
@@ -199,13 +217,16 @@ export async function runPlan(plan: Plan, absFile: string, timeoutMs: number): P
   const before = await readFile(absFile, 'utf8').catch(() => undefined)
   const result = await new Promise<{ code: number | null; output: string }>(done => {
     const finish = (code: number | null, output: string): void => done({ code, output: output.trim() })
-    if (plan.shell !== undefined) {
-      const child = spawn(plan.shell, { cwd: plan.cwd, shell: true, windowsHide: true, timeout: timeoutMs })
+    const shellCmd = plan.shell ?? (process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(plan.file)
+      ? [plan.file, ...plan.args].map(a => `"${a.replace(/"/g, '\\"')}"`).join(' ')
+      : undefined)
+    if (shellCmd !== undefined) {
+      const child = spawn(shellCmd, { cwd: plan.cwd, shell: true, windowsHide: true, timeout: timeoutMs })
       let output = ''
       child.stdout.on('data', (d: Buffer) => { output += d.toString() })
       child.stderr.on('data', (d: Buffer) => { output += d.toString() })
       child.on('error', e => finish(-1, e.message))
-      child.on('close', code => finish(code, output))
+      child.on('close', (code, signal) => finish(code, output.trim() || (code === null ? (signal === 'SIGTERM' ? `timed out after ${timeoutMs} ms` : `terminated by ${signal ?? 'signal'}`) : '')))
       return
     }
     execFile(plan.file, plan.args, { cwd: plan.cwd, timeout: timeoutMs, windowsHide: true, maxBuffer: 4 * 1024 * 1024 }, (error, stdout, stderr) => {

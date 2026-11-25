@@ -111,3 +111,24 @@ test('post-execute formats the edited file and appends a note', async () => {
     rmSync(ws, { recursive: true, force: true })
   }
 })
+
+test('planFor finds config for forward-slash absolute paths and skips paths outside workspace', async () => {
+  const ws = workspace({ '.prettierrc': '{}', 'node_modules/prettier/bin/prettier.cjs': FAKE_PRETTIER, 'src/a.ts': "let x  = 'y'\n" })
+  const outside = workspace({ 'b.ts': "let b  = 'c'\n" })
+  try {
+    const forward = join(ws, 'src/a.ts').replace(/\\/g, '/')
+    assert.equal(planFor(forward, ws, ALL)?.formatter, 'prettier')
+
+    let listener: ((...a: any[]) => Promise<any>) | undefined
+    const ctx = { on: (_e: string, fn: typeof listener) => { listener = fn }, logger: { warn() {} } }
+    apply(ctx as never, { formatters: ALL, custom: [], ignore: [], tools: ['write', 'edit'], timeoutMs: 10_000, reportChanges: true, reportErrors: true } as never)
+    const exec = { name: 'edit', arguments: { file_path: join(outside, 'b.ts') }, agent: { session: { header: { cwd: ws } } } }
+    const ok = { isError: false, value: null, content: [{ type: 'text', text: 'ok' }] }
+    const decision = await listener!(exec, ok, async () => ({ kind: 'accept' }))
+    assert.equal(decision.content, undefined, 'outside-workspace edits are not formatted')
+    assert.equal(readFileSync(join(outside, 'b.ts'), 'utf8'), "let b  = 'c'\n")
+  } finally {
+    rmSync(ws, { recursive: true, force: true })
+    rmSync(outside, { recursive: true, force: true })
+  }
+})

@@ -231,8 +231,10 @@ export async function runDsh(options: RunOptions): Promise<RunResult> {
 
 function run(cmd: string, args: string[], options: { cwd: string; env: NodeJS.ProcessEnv }): Promise<string> {
   return new Promise((done, fail) => {
-    // npm is a .cmd shim on Windows, which only runs through a shell.
-    execFile(cmd, args, { ...options, maxBuffer: 16 * 1024 * 1024, shell: windows && cmd === 'npm' }, (error, stdout, stderr) => {
+    const useNpmCli = cmd === 'npm' && process.env.npm_execpath !== undefined
+    const file = useNpmCli ? process.execPath : cmd
+    const argv = useNpmCli ? [process.env.npm_execpath!, ...args] : args
+    execFile(file, argv, { ...options, maxBuffer: 16 * 1024 * 1024, shell: windows && !useNpmCli && cmd === 'npm' }, (error, stdout, stderr) => {
       if (error !== null) fail(new Error(`${cmd} ${args.join(' ')} failed:\n${stdout}\n${stderr}`))
       else done(stdout)
     })
